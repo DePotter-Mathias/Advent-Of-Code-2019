@@ -5,22 +5,22 @@
 #include <vector>
 
 using namespace std;
-using intcode_iter = vector<int>::iterator;
+using iter = vector<int>::iterator;
 
 vector<int> get_input_data()
 {
 	std::ifstream infile( "day2input.txt" );
 	int data;
-	char separator_car;
+	char separator_char;
 	vector<int> intcode;
-	while ( infile >> data >> separator_car )
+	while ( infile >> data >> separator_char )
 	{
 		intcode.push_back( data );
 	}
 	return intcode;
 }
 
-bool execute_operation( intcode_iter start, const intcode_iter op )
+bool execute_operation( iter start, const iter op )
 {
 	const int operation = *(op + 0);
 	const int left_value = *(op + 1);
@@ -47,7 +47,7 @@ int execute_operation_with_inital_values( const int a, const int b, vector<int> 
 	intcode[1] = a;
 	intcode[2] = b;
 
-	intcode_iter p = intcode.begin();
+	iter p = intcode.begin();
 	for/*ever*/ ( ;;)
 	{
 		if ( !execute_operation( intcode.begin(), p ) )
@@ -60,8 +60,7 @@ int execute_operation_with_inital_values( const int a, const int b, vector<int> 
 			else
 			{
 				//invalid
-				/*cout << "An error occurred at index: " << p - intcode.begin() << ", value: " << *p;
-				return NULL;*/
+				cout << "An error occurred at index: " << p - intcode.begin() << ", value: " << *p << endl;
 				break;
 			}
 		}
