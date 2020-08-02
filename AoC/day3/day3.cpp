@@ -5,11 +5,9 @@
 
 using namespace std;
 
-#define small_long 0.0000000001l
-
 struct wire_point
 {
-	/*signed*/ long x = 0, y = 0;
+	/*signed*/ long int x = 0, y = 0;
 
 	inline long Length( const wire_point& w )const
 	{
@@ -38,18 +36,13 @@ struct wire_segment
 	wire_point begin, end;
 	long length = 0;
 };
+const wire_segment empty_wire_segment;
 
 using wire = vector<wire_segment>;
 
 vector<wire> Get_input_data()
 {
-	enum class direction
-	{
-		up = 'U',
-		down = 'D',
-		left = 'L',
-		right = 'R'
-	};
+
 
 	std::ifstream infile( "day3input.txt" );
 	unsigned int len;
@@ -59,22 +52,22 @@ vector<wire> Get_input_data()
 	wire wire;
 	wire_segment segment;
 
-	auto displace = []( wire_segment& seg, const direction& dir, const unsigned int len )
+	auto displace = []( wire_segment& seg, const char& dir, const unsigned int len )
 	{
 		seg.length = len;
 
 		switch ( dir )
 		{
-		case direction::up:
+		case 'U': //  up
 			seg.end.y += len;
 			break;
-		case direction::down:
+		case 'D': //  down
 			seg.end.y -= len;
 			break;
-		case direction::left:
+		case 'L': //  left
 			seg.end.x -= len;
 			break;
-		case direction::right:
+		case 'R': //  right
 			seg.end.x += len;
 			break;
 		}
@@ -84,15 +77,16 @@ vector<wire> Get_input_data()
 	{
 		segment.begin = segment.end;
 
-		displace( segment, direction( toupper( dir ) ), len );
+		displace( segment, toupper( dir ), len );
 
+		//wire.emplace_back( segment.begin, segment.end );
 		wire.push_back( segment );
 
 		if ( infile >> separator_char, separator_char != ',' )
 		{
 			wires.push_back( wire );
 			wire.clear();
-			segment = {};
+			segment = empty_wire_segment;
 			//one step back as we just ate the next line's info
 			infile.unget();
 		}
@@ -138,50 +132,38 @@ int main()
 		return NULL;
 	}
 
-	//pair, but could be (anonymous) struct
-	vector<pair<wire_point, long>> intersection_points;
+	long closest_intersection_point = LONG_MAX;
+	long shortest_intersection_point = LONG_MAX;
 
-	long distance_traveled1 = 0;
-	long distance_traveled2 = 0;
 	wire_point result;
 
 	//every segment of first wire
+	long distance_traveled1 = 0;
 	for ( auto wire1 : wires.front() )
 	{
-		//every segment of second wire
+		long distance_traveled2 = 0;
 		for ( auto wire2 : wires.back() )
 		{
-			if ( Intersect( wire1, wire2, result ) )
+			if ( Intersect( wire1, wire2, result ) && !result.Is_empty() )
 			{
-				if ( !result.Is_empty() )
-				{
-					long wire_distances =
-						//wire sums so far 
-						distance_traveled1 + distance_traveled2
-						//plus part of the wires
-						+ result.Length( wire1.begin ) + result.Length( wire2.begin );
+				long wire_distances =
+					//sum of wire so far 
+					distance_traveled1 +
+					distance_traveled2
+					//plus remaining part of the wires
+					+ result.Length( wire1.begin )
+					+ result.Length( wire2.begin );
 
-					intersection_points.push_back( { result, wire_distances } );
-				}
+
+				shortest_intersection_point = min( wire_distances, shortest_intersection_point );
+				closest_intersection_point = min( result.Manhattan_distance(), closest_intersection_point );
 			}
 			distance_traveled2 += wire2.length;
 		}
 		distance_traveled1 += wire1.length;
-		distance_traveled2 = 0;
 	}
 
-	if ( !intersection_points.empty() )
-	{
-		auto smallest_intersection = min_element( intersection_points.cbegin(), intersection_points.cend() );
-		//not needed? implicitly takes first from pair?
-		//, []( auto a, auto b ) { return a.first < b.first; });
+	cout << "part 1 result: " << closest_intersection_point << endl;
 
-		cout << "part 1 result: " << smallest_intersection->first.Manhattan_distance() << endl;
-
-		auto shortest_intersection = min_element( intersection_points.cbegin(), intersection_points.cend(),
-												  []( auto a, auto b ) { return a.second < b.second; } );
-
-		cout << "part 2 result: " << shortest_intersection->second << endl;
-
-	}
+	cout << "part 2 result: " << shortest_intersection_point << endl;
 }
